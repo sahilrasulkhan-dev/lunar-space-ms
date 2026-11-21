@@ -169,10 +169,13 @@ class ImageProcessor:
         # Calculate stats
         total_pixels = gray.shape[0] * gray.shape[1]
         safe_pixels = np.count_nonzero(safe_mask)
-        unsafe_pixels = np.count_nonzero(dense_edges) + np.count_nonzero(crater_mask)
+        rock_pixels = np.count_nonzero(dense_edges)
+        crater_pixels = np.count_nonzero(crater_mask)
+        hazard_pixels = np.count_nonzero(cv2.bitwise_or(dense_edges, crater_mask))
         
         safe_percentage = min(100.0, max(0.0, (safe_pixels / total_pixels) * 100))
-        hazard_pixels = np.count_nonzero(cv2.bitwise_or(dense_edges, crater_mask))
+        rock_percentage = min(100.0, max(0.0, (rock_pixels / total_pixels) * 100))
+        crater_percentage = min(100.0, max(0.0, (crater_pixels / total_pixels) * 100))
         unsafe_percentage = min(100.0, max(0.0, (hazard_pixels / total_pixels) * 100))
         landing_score = min(100, safe_percentage * 1.5) # Simple heuristic
 
@@ -186,6 +189,8 @@ class ImageProcessor:
         return {
             "safe_percentage": round(safe_percentage, 2),
             "unsafe_percentage": round(unsafe_percentage, 2),
+            "rock_percentage": round(rock_percentage, 2),
+            "crater_percentage": round(crater_percentage, 2),
             "landing_score": round(landing_score, 2),
             "confidence": model_conf,
             "terrain_type": "YOLO-Classified Mare Basalt" if safe_percentage > 60 else "Rocky/Cratered High-Hazard Regolith",

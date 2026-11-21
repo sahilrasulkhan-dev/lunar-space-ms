@@ -9,6 +9,8 @@ interface TerrainInfoProps {
     landing_score: number;
     safe_percentage: number;
     unsafe_percentage: number;
+    rock_percentage?: number;
+    crater_percentage?: number;
     terrain_type: string;
     confidence: number;
     yolo_detections_count?: number;
@@ -18,6 +20,8 @@ interface TerrainInfoProps {
 
 export function TerrainInfo({ data }: TerrainInfoProps) {
   const isOptimal = data.landing_score >= 65;
+  const rockPct = data.rock_percentage !== undefined ? data.rock_percentage : data.unsafe_percentage;
+  const isHighRockHazard = rockPct > 20;
 
   // Clear, comfortably readable text metrics (13px/14px labels, 24px numbers)
   const stats = [
@@ -30,12 +34,12 @@ export function TerrainInfo({ data }: TerrainInfoProps) {
       border: "border-emerald-500/30"
     },
     { 
-      label: "Crater & Hazard Area", 
-      value: `${data.unsafe_percentage}%`, 
-      metric: "Exclusion Zone", 
+      label: "Rock & Boulder Field", 
+      value: `${rockPct}%`, 
+      metric: isHighRockHazard ? "SIREN ACTIVE (>20%)" : "Exclusion Field", 
       icon: Activity, 
-      color: "text-rose-400",
-      border: "border-rose-500/30"
+      color: isHighRockHazard ? "text-rose-400 animate-pulse font-bold" : "text-rose-400",
+      border: isHighRockHazard ? "border-rose-500/70 shadow-[0_0_15px_rgba(244,63,94,0.3)] bg-rose-950/20" : "border-rose-500/30"
     },
     { 
       label: "Geological Type", 

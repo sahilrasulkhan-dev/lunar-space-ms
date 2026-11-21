@@ -52,6 +52,8 @@ def analyze_image(image_id: int, db: Session = Depends(get_db)):
             "results": {
                 "safe_percentage": db_analysis.safe_percentage,
                 "unsafe_percentage": db_analysis.unsafe_percentage,
+                "rock_percentage": stats.get("rock_percentage", stats.get("unsafe_percentage", 0)),
+                "crater_percentage": stats.get("crater_percentage", 0),
                 "landing_score": db_analysis.landing_score,
                 "confidence": db_analysis.confidence,
                 "terrain_type": db_analysis.terrain_type,

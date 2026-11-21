@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Navbar } from "@/components/layout/Navbar";
 import { Sidebar } from "@/components/layout/Sidebar";
@@ -19,7 +19,7 @@ import { MissionReportView } from "@/components/dashboard/MissionReportView";
 import { RoverSimulationView } from "@/components/dashboard/RoverSimulationView";
 import { LunarChatSection } from "@/components/chat/LunarChatSection";
 import { motion, AnimatePresence } from "framer-motion";
-import { Compass, Radio, Layers, Sparkles, Eye, Route, FileText, Upload, Cpu, Bot } from "lucide-react";
+import { Compass, Radio, Layers, Sparkles, Eye, Route, FileText, Upload, Cpu, Bot, AlertTriangle, Volume2, VolumeX } from "lucide-react";
 
 type TabType = "upload" | "analysis" | "navigation" | "simulation" | "ice" | "satellite" | "report" | "assistant";
 
@@ -32,6 +32,44 @@ function DashboardContent() {
   const [imageId, setImageId] = useState<number | null>(null);
   const [originalImagePath, setOriginalImagePath] = useState<string | null>(null);
   const [analysisData, setAnalysisData] = useState<any>(null);
+  const [alarmPlaying, setAlarmPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Stop audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+    };
+  }, []);
+
+  const playHazardAlarm = () => {
+    try {
+      if (!audioRef.current) {
+        audioRef.current = new Audio("/audio/hazard_alarm.mp3");
+        audioRef.current.loop = true;
+      }
+      audioRef.current.currentTime = 0;
+      audioRef.current.volume = 0.9;
+      audioRef.current.play().then(() => {
+        setAlarmPlaying(true);
+      }).catch((e) => {
+        console.warn("Audio autoplay blocked by browser policy until user click:", e);
+        setAlarmPlaying(false);
+      });
+    } catch (err) {
+      console.error("Alarm audio error:", err);
+    }
+  };
+
+  const stopHazardAlarm = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      setAlarmPlaying(false);
+    }
+  };
 
   // Sync tab from URL query if present
   useEffect(() => {
@@ -52,6 +90,14 @@ function DashboardContent() {
     setAnalysisData(data);
     setIsAnalyzed(true);
     setActiveTab("analysis");
+
+    // Play siren alarm if rock/hazard percentage is greater than 20%
+    const rockPercentage = data?.rock_percentage ?? data?.unsafe_percentage ?? 0;
+    if (rockPercentage > 20) {
+      playHazardAlarm();
+    } else {
+      stopHazardAlarm();
+    }
   };
 
   const tabs = [
@@ -125,6 +171,43 @@ function DashboardContent() {
               })}
             </div>
           </header>
+
+          {/* Critical Rock Hazard Alarm Banner (> 20% Rock Field) */}
+          {isAnalyzed && ((analysisData?.rock_percentage ?? analysisData?.unsafe_percentage ?? 0) > 20) && (
+            <div className="bg-rose-950/80 border-b border-rose-500/60 px-6 py-2.5 flex flex-wrap items-center justify-between text-rose-200 text-xs md:text-sm font-mono backdrop-blur-xl shadow-[0_0_25px_rgba(244,63,94,0.35)] shrink-0 z-20 gap-3">
+              <div className="flex items-center gap-3">
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
+                </span>
+                <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0" />
+                <span>
+                  <strong className="text-white font-bold tracking-wider uppercase">CRITICAL ROCK HAZARD ALERT:</strong> Lunar rock density is <strong className="text-white">{(analysisData?.rock_percentage ?? analysisData?.unsafe_percentage ?? 0)}%</strong> (Threshold &gt; 20.0%). Hazard siren active!
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                {alarmPlaying ? (
+                  <button
+                    onClick={stopHazardAlarm}
+                    data-cursor-text="SILENCE"
+                    className="px-3.5 py-1.5 rounded bg-rose-600 hover:bg-rose-500 text-white font-mono text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-[0_0_15px_rgba(244,63,94,0.6)]"
+                  >
+                    <VolumeX className="w-4 h-4 animate-pulse" />
+                    <span>MUTE SIREN</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={playHazardAlarm}
+                    data-cursor-text="PLAY"
+                    className="px-3.5 py-1.5 rounded bg-rose-900/70 hover:bg-rose-800 text-rose-300 font-mono text-xs font-bold transition flex items-center gap-2 cursor-pointer border border-rose-500/40"
+                  >
+                    <Volume2 className="w-4 h-4" />
+                    <span>PLAY SIREN</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Tab Content Canvas */}
           <div className="flex-1 overflow-y-auto p-4 md:p-6 relative z-10">
