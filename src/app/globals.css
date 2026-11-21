@@ -3,60 +3,134 @@
 @plugin "tailwindcss-animate";
 
 @theme {
-  --color-space-black: #050816;
-  --color-dark-navy: #08152B;
-  --color-electric-blue: #00f0ff;
-  --color-neon-cyan: #00ffff;
-  --color-neon-purple: #b026ff;
+  --color-primary-bg: #05070D;
+  --color-space-bg: #080E1A;
+  --color-space-navy: #0B1426;
+  --color-panel-bg: rgba(11, 18, 32, 0.82);
+  --color-lunar-surface: #111A2E;
+  --color-lunar-border: rgba(160, 195, 240, 0.12);
+  --color-lunar-border-hover: rgba(180, 215, 255, 0.35);
+  --color-lunar-blue: #84A0C6;
+  --color-lunar-icy: #B8D4F5;
+  --color-lunar-blue-glow: rgba(100, 155, 235, 0.22);
+  --color-primary-text: #F4F7FC;
+  --color-secondary-text: #B4C2D6;
+  --color-muted-text: #8292A8;
+  --color-accent: #E2ECF8;
+
+  /* Legacy color aliases mapped to atmospheric blue palette */
+  --color-space-black: #05070D;
+  --color-dark-navy: #080E1A;
+  --color-electric-blue: #84A0C6;
+  --color-neon-cyan: #B8D4F5;
+  --color-neon-purple: #9FBAD8;
   
   --font-sans: var(--font-inter);
-  --font-heading: var(--font-orbitron);
-  --font-mono: var(--font-jetbrains);
+  --font-heading: var(--font-heading);
+  --font-mono: var(--font-mono);
 }
 
 :root {
-  --background: #050816;
-  --foreground: #ffffff;
+  --background: #05070D;
+  --foreground: #F4F7FC;
+  --font-inter: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-heading: "Space Grotesk", "Cinzel", "Syne", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", "Fira Code", Menlo, Monaco, Consolas, monospace;
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-inter), sans-serif;
+  background-color: #05070D;
+  color: #F4F7FC;
+  font-family: var(--font-inter);
   overflow-x: hidden;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeSpeed;
 }
 
-/* Glassmorphism Utilities */
+/* Atmospheric Blue & Cinematic Utilities */
 @layer utilities {
   .glass {
-    @apply bg-white/5 backdrop-blur-md border border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.1)];
+    background: rgba(10, 17, 30, 0.85);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(160, 195, 240, 0.12);
+    transform: translateZ(0);
   }
   .glass-card {
-    @apply bg-dark-navy/40 backdrop-blur-lg border border-electric-blue/20 rounded-2xl;
+    background: rgba(11, 18, 32, 0.84);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(160, 195, 240, 0.12);
+    border-radius: 0.75rem;
+    transform: translateZ(0);
   }
   .glass-panel {
-    @apply bg-[#050816]/70 backdrop-blur-xl border border-white/10;
+    background: rgba(8, 14, 26, 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(160, 195, 240, 0.14);
+    transform: translateZ(0);
   }
-  .neon-text {
-    @apply text-electric-blue drop-shadow-[0_0_10px_rgba(0,240,255,0.8)];
+  .outlined-text {
+    -webkit-text-stroke: 1.5px rgba(160, 195, 240, 0.10);
+    color: transparent;
+    user-select: none;
   }
-  .neon-border {
-    @apply border border-electric-blue shadow-[0_0_15px_rgba(0,240,255,0.4)];
+  .outlined-text-dim {
+    -webkit-text-stroke: 1px rgba(160, 195, 240, 0.05);
+    color: transparent;
+    user-select: none;
+  }
+  .blue-halo {
+    box-shadow: 0 0 90px rgba(100, 160, 240, 0.16);
+  }
+  .blue-rim {
+    box-shadow: inset -35px 12px 90px rgba(0, 0, 0, 0.96), 0 0 70px rgba(130, 185, 255, 0.15);
+  }
+  .lunar-halo {
+    box-shadow: 0 0 100px rgba(120, 175, 245, 0.18), inset 0 0 60px rgba(5, 10, 20, 0.8);
+  }
+  .lunar-rim {
+    box-shadow: inset -30px 10px 80px rgba(0, 0, 0, 0.95), 0 0 70px rgba(150, 200, 255, 0.15);
   }
 }
 
-/* Custom scrollbar */
+/* Subtle Icy-Blue Twinkling Starfield */
+.stars-bg {
+  background-image: 
+    radial-gradient(1px 1px at 20px 30px, #ffffff, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 70px 90px, rgba(180,210,255,0.8), rgba(0,0,0,0)),
+    radial-gradient(1.5px 1.5px at 150px 60px, #ffffff, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 260px 180px, rgba(132,175,235,0.9), rgba(0,0,0,0)),
+    radial-gradient(1.5px 1.5px at 380px 240px, #ffffff, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 490px 120px, rgba(200,225,255,0.7), rgba(0,0,0,0)),
+    radial-gradient(1.5px 1.5px at 620px 310px, rgba(180,215,255,0.9), rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 750px 200px, rgba(132,175,235,0.9), rgba(0,0,0,0));
+  background-repeat: repeat;
+  background-size: 600px 600px;
+  will-change: transform;
+}
+
+/* Smooth customized scrollbar with icy-blue track */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: rgba(5, 8, 22, 0.5);
+  background: #05070D;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 240, 255, 0.3);
-  border-radius: 4px;
+  background: rgba(160, 195, 240, 0.22);
+  border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 240, 255, 0.6);
+  background: rgba(180, 215, 255, 0.45);
+}
+
+/* Custom Rocket Cursor: Hide default OS cursor on desktop fine pointer devices */
+@media (pointer: fine) {
+  *, *::before, *::after {
+    cursor: none !important;
+  }
 }

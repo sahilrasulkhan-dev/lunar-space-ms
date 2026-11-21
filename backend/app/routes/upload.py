@@ -27,7 +27,10 @@ async def upload_image(
     # current_user: User = Depends(get_current_user) # Optional for now
 ):
     logger.info(f"Image uploaded: {file.filename}")
-    if not file.content_type.startswith("image/"):
+    content_type = file.content_type or ""
+    file_ext = os.path.splitext(file.filename or "")[1].lower()
+    valid_exts = {".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff", ".bmp"}
+    if not (content_type.startswith("image/") or file_ext in valid_exts):
         raise ProcessingError("File provided is not an image.", "Format Validation")
         
     # Generate unique filename

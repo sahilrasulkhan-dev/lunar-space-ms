@@ -1,66 +1,58 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Terminal } from "lucide-react";
+import { Terminal, ChevronUp, ChevronDown, Trash2 } from "lucide-react";
 
 export function BottomConsole() {
-  const [messages, setMessages] = useState<string[]>([]);
-  const [currentText, setCurrentText] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
-
-  const script = [
-    "Initializing LunaSafe AI Engine v4.2...",
-    "Connecting to lunar reconnaissance orbiter database...",
-    "Calibrating optical sensors...",
-    "Ready for image upload.",
-  ];
-
-  useEffect(() => {
-    let index = 0;
-    let charIndex = 0;
-    
-    const typeWriter = () => {
-      if (index < script.length) {
-        setIsTyping(true);
-        if (charIndex < script[index].length) {
-          setCurrentText((prev) => prev + script[index].charAt(charIndex));
-          charIndex++;
-          setTimeout(typeWriter, 30);
-        } else {
-          setMessages((prev) => [...prev, script[index]]);
-          setCurrentText("");
-          charIndex = 0;
-          index++;
-          setIsTyping(false);
-          setTimeout(typeWriter, 500);
-        }
-      }
-    };
-
-    setTimeout(typeWriter, 1000);
-  }, []);
+  const [messages, setMessages] = useState<string[]>([
+    "LUNAR SPACE AI OS v4.2 [Kernel Build 2026.11]",
+    "Establishing secure orbital handshake with Lunar Reconnaissance Orbiter (LRO)...",
+    "Loading Apollo & Artemis selenographic reference maps...",
+    "Surface segmentation pipeline: Hough Canny Edge Detector ready.",
+    "Awaiting image upload or mission coordinates...",
+  ]);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
-    <div className="h-48 border-t border-white/10 bg-[#050816]/95 backdrop-blur-xl flex flex-col font-mono text-sm relative z-40">
-      <div className="h-8 border-b border-white/5 flex items-center px-4 gap-2 text-white/50 text-xs uppercase tracking-widest bg-white/5">
-        <Terminal className="w-3.5 h-3.5" />
-        Mission Console
+    <div className={`border-t border-white/[0.08] bg-[#050812]/95 backdrop-blur-md flex flex-col font-mono text-xs transition-all duration-200 relative z-40 ${isCollapsed ? "h-9" : "h-36"}`}>
+      {/* Console Bar Header */}
+      <div className="h-9 border-b border-white/[0.06] flex items-center justify-between px-4 text-[#A1A1AA] bg-white/[0.02]">
+        <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider">
+          <Terminal className="w-3.5 h-3.5 text-[#8496B4]" />
+          <span>MISSION TELEMETRY CONSOLE</span>
+          <span className="text-white/20">|</span>
+          <span className="text-[10px] text-emerald-400">DSN-NODE 01 ACTIVE</span>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setMessages([])} 
+            className="hover:text-white transition-colors cursor-pointer" 
+            title="Clear Console"
+          >
+            <Trash2 className="w-3 h-3 text-[#71717A] hover:text-[#A1A1AA]" />
+          </button>
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="hover:text-white transition-colors cursor-pointer"
+            title={isCollapsed ? "Expand Console" : "Collapse Console"}
+          >
+            {isCollapsed ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </button>
+        </div>
       </div>
-      <div className="flex-1 p-4 overflow-y-auto">
-        {messages.map((msg, i) => (
-          <div key={i} className="text-white/60 mb-1 flex gap-2">
-            <span className="text-electric-blue/50">{`>`}</span>
-            {msg}
-          </div>
-        ))}
-        {isTyping && (
-          <div className="text-white/90 flex gap-2">
-            <span className="text-electric-blue">{`>`}</span>
-            {currentText}
-            <span className="w-2 h-4 bg-electric-blue inline-block animate-pulse ml-1" />
-          </div>
-        )}
-      </div>
+
+      {/* Terminal Body */}
+      {!isCollapsed && (
+        <div className="flex-1 p-2.5 px-4 overflow-y-auto space-y-1">
+          {messages.map((msg, i) => (
+            <div key={i} className="text-[#A1A1AA] flex items-start gap-2 leading-relaxed">
+              <span className="text-[#8496B4] font-semibold select-none">{`>`}</span>
+              <span>{msg}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

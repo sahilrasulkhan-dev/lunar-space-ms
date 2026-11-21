@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Mountain, Target, ShieldAlert, Activity } from "lucide-react";
+import { Mountain, Target, ShieldAlert, Activity, CheckCircle, AlertTriangle } from "lucide-react";
 import { GlassCard } from "../ui/GlassCard";
 
 interface TerrainInfoProps {
@@ -11,54 +11,104 @@ interface TerrainInfoProps {
     unsafe_percentage: number;
     terrain_type: string;
     confidence: number;
+    yolo_detections_count?: number;
+    model_name?: string;
   };
 }
 
 export function TerrainInfo({ data }: TerrainInfoProps) {
+  const isOptimal = data.landing_score >= 65;
+
+  // Clear, comfortably readable text metrics (13px/14px labels, 24px numbers)
   const stats = [
-    { label: "Safe Zone", value: `${data.safe_percentage}%`, score: "High", icon: Mountain, color: "text-emerald-400" },
-    { label: "Hazard Zone", value: `${data.unsafe_percentage}%`, score: "Critical", icon: Activity, color: "text-red-500" },
-    { label: "Terrain Type", value: data.terrain_type, score: "Identified", icon: Target, color: "text-orange-400" },
-    { label: "Landing Score", value: `${data.landing_score}/100`, score: "Optimal", icon: ShieldAlert, color: "text-electric-blue" },
+    { 
+      label: "Safe Touchdown Zone", 
+      value: `${data.safe_percentage}%`, 
+      metric: "Verified Surface", 
+      icon: Mountain, 
+      color: "text-emerald-400",
+      border: "border-emerald-500/30"
+    },
+    { 
+      label: "Crater & Hazard Area", 
+      value: `${data.unsafe_percentage}%`, 
+      metric: "Exclusion Zone", 
+      icon: Activity, 
+      color: "text-rose-400",
+      border: "border-rose-500/30"
+    },
+    { 
+      label: "Geological Type", 
+      value: data.terrain_type, 
+      metric: "Regolith Matrix", 
+      icon: Target, 
+      color: "text-[#A8C4E6]",
+      border: "border-[rgba(160,195,240,0.2)]"
+    },
+    { 
+      label: "Landing Feasibility", 
+      value: `${data.landing_score}/100`, 
+      metric: isOptimal ? "GO FOR TOUCHDOWN" : "CAUTION ADVISED", 
+      icon: ShieldAlert, 
+      color: isOptimal ? "text-[#F4F7FC]" : "text-amber-300",
+      border: "border-[rgba(160,195,240,0.25)]"
+    },
   ];
 
-  const container = {
-    hidden: { opacity: 0 },
-    show: { opacity: 1, transition: { staggerChildren: 0.1 } }
-  };
-  const item = { hidden: { opacity: 0, x: 20 }, show: { opacity: 1, x: 0 } };
-
   return (
-    <motion.div variants={container} initial="hidden" animate="show" className="grid grid-cols-2 gap-4">
-      {stats.map((stat, i) => (
-        <motion.div key={i} variants={item}>
-          <GlassCard className="p-4 h-full" glowColor="cyan">
-            <div className="flex items-start justify-between mb-2">
-              <div className={`p-2 rounded-lg bg-white/5 ${stat.color}`}>
-                <stat.icon className="w-5 h-5" />
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        {stats.map((stat, i) => (
+          <GlassCard key={i} className={`p-4 md:p-5 h-full border ${stat.border}`} variant="editorial">
+            <div className="flex items-start justify-between mb-3">
+              <div className="p-2.5 rounded-lg bg-[#84A0C6]/10 border border-[#84A0C6]/25">
+                <stat.icon className={`w-5 h-5 ${stat.color}`} />
               </div>
-              <span className="text-xs font-mono text-white/40">{stat.score}</span>
+              <span className="text-xs font-mono text-[#8292A8] tracking-wider uppercase font-medium">
+                {stat.metric}
+              </span>
             </div>
-            <h4 className="text-white/60 text-sm mb-1">{stat.label}</h4>
-            <div className="font-heading font-semibold text-lg">{stat.value}</div>
+            <div className="text-xs md:text-sm font-mono text-[#B4C2D6] uppercase tracking-wider mb-1 font-medium">
+              {stat.label}
+            </div>
+            <div className="font-mono font-bold text-xl md:text-2xl text-[#F4F7FC] tracking-tight">
+              {stat.value}
+            </div>
           </GlassCard>
-        </motion.div>
-      ))}
-      
-      <motion.div variants={item} className="col-span-2 mt-2">
-        <GlassCard className="p-5 border-emerald-400/30 bg-emerald-400/5">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <h4 className="font-heading text-emerald-400">AI Recommendation</h4>
+        ))}
+      </div>
+
+      {/* AI Scientific Synthesis - Enhanced Readability */}
+      <GlassCard className="p-5 md:p-6 border border-[rgba(160,195,240,0.2)] bg-[#84A0C6]/5" variant="editorial">
+        <div className="flex flex-wrap items-center gap-2.5 mb-3 pb-2.5 border-b border-[rgba(160,195,240,0.12)]">
+          {isOptimal ? (
+            <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0" />
+          ) : (
+            <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />
+          )}
+          <h4 className="font-mono text-sm font-bold uppercase tracking-wider text-[#F4F7FC]">
+            Autonomous Mission Synthesis
+          </h4>
+          <div className="ml-auto flex items-center gap-2">
+            <span className="px-2 py-0.5 rounded bg-[#00F0FF]/10 border border-[#00F0FF]/30 font-mono text-[11px] text-[#00F0FF] font-semibold">
+              {data.model_name || "YOLO (best.pt)"}
+            </span>
+            <span className="font-mono text-xs text-[#A8C4E6] font-semibold">
+              CONFIDENCE: {data.confidence}%
+            </span>
           </div>
-          <p className="text-sm text-white/80 leading-relaxed">
-            AI analysis complete with {data.confidence}% confidence. 
-            {data.landing_score > 70 
-              ? " Landing conditions are optimal. Extensive safe zones mapped."
-              : " Landing conditions are hazardous. High density of craters and rocks detected."}
-          </p>
-        </GlassCard>
-      </motion.div>
-    </motion.div>
+        </div>
+
+        <p className="text-sm md:text-base text-[#B4C2D6] leading-relaxed font-sans">
+          Surface classification completed with <strong className="text-[#F4F7FC] font-semibold">{data.confidence}%</strong> neural model certainty using <strong className="text-[#00F0FF] font-semibold">{data.model_name || "YOLO (best.pt)"}</strong>
+          {data.yolo_detections_count !== undefined && (
+            <span> ({data.yolo_detections_count} lunar hazard feature{data.yolo_detections_count === 1 ? "" : "s"} isolated)</span>
+          )}.
+          {isOptimal 
+            ? " Landing corridor parameters meet Apollo/Artemis Class-A tolerances. Low roughness index detected with ample contiguous safe zones."
+            : " Terrain exhibits elevated crater density and steep rock scatter. Recommend re-orienting landing thrusters toward adjacent low-slope mare basalt."}
+        </p>
+      </GlassCard>
+    </div>
   );
 }

@@ -1,106 +1,200 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Moon, Satellite, ShieldCheck, Database, Zap } from "lucide-react";
+
+const STEPS = [
+  "INITIALIZING LUNAR CORE SYSTEMS...",
+  "SYNCHRONIZING ORBITAL TELEMETRY...",
+  "CALIBRATING SPECTRAL SENSORS...",
+  "ALL SYSTEMS OPERATIONAL",
+];
 
 export function LoadingScreen({ onComplete }: { onComplete: () => void }) {
   const [progress, setProgress] = useState(0);
   const [step, setStep] = useState(0);
-  
-  const steps = [
-    { text: "Initializing AI Core...", icon: Zap },
-    { text: "Loading Terrain Models...", icon: Database },
-    { text: "Connecting Mission Control...", icon: Satellite },
-    { text: "Systems Ready.", icon: ShieldCheck },
-  ];
+  const [exiting, setExiting] = useState(false);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(timer);
-          setTimeout(onComplete, 800); // Wait briefly at 100%
-          return 100;
-        }
-        
-        // Update step based on progress
-        if (prev === 25) setStep(1);
-        if (prev === 60) setStep(2);
-        if (prev === 90) setStep(3);
-        
-        return prev + 1;
-      });
-    }, 30);
-
-    return () => clearInterval(timer);
+  const finish = useCallback(() => {
+    setExiting(true);
+    setTimeout(onComplete, 900);
   }, [onComplete]);
 
-  const CurrentIcon = steps[step].icon;
+  useEffect(() => {
+    let frame: number;
+    let start: number | null = null;
+    const duration = 2200; // ms total loading time
+
+    const tick = (now: number) => {
+      if (!start) start = now;
+      const elapsed = now - start;
+      const pct = Math.min(100, Math.round((elapsed / duration) * 100));
+      setProgress(pct);
+
+      if (pct < 25) setStep(0);
+      else if (pct < 55) setStep(1);
+      else if (pct < 85) setStep(2);
+      else setStep(3);
+
+      if (pct >= 100) {
+        finish();
+        return;
+      }
+      frame = requestAnimationFrame(tick);
+    };
+
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [finish]);
+
+  const prefersReducedMotion =
+    typeof window !== "undefined" &&
+    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 1 }}
-        exit={{ opacity: 0, transition: { duration: 0.8, ease: "easeInOut" } }}
-        className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-space-black"
-      >
-        {/* Animated Background */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-electric-blue/10 rounded-full blur-[100px]" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-neon-purple/10 rounded-full blur-[80px]" />
-        </div>
+      {!exiting && (
+        <motion.div
+          key="loader"
+          initial={{ opacity: 1 }}
+          exit={{ opacity: 0, scale: 1.03, transition: { duration: 0.85, ease: [0.16, 1, 0.3, 1] } }}
+          className="fixed inset-0 z-[200] flex flex-col items-center justify-center overflow-hidden"
+          style={{ background: "#030508" }}
+        >
+          {/* ── Deep space starfield ── */}
+          <div className="absolute inset-0 stars-bg opacity-50 pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col items-center max-w-md w-full px-6">
-          {/* Central Logo Animation */}
-          <motion.div 
-            animate={{ 
-              rotate: 360,
-              boxShadow: [
-                "0 0 20px rgba(0, 240, 255, 0.2)",
-                "0 0 60px rgba(0, 240, 255, 0.5)",
-                "0 0 20px rgba(0, 240, 255, 0.2)"
-              ]
+          {/* ── Atmospheric blue radial glows ── */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              backgroundImage:
+                "radial-gradient(ellipse 60% 55% at 50% 65%, rgba(80,135,220,0.18) 0%, transparent 70%), radial-gradient(ellipse 50% 40% at 50% 50%, rgba(50,90,170,0.10) 0%, transparent 65%)",
             }}
-            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-            className="w-24 h-24 rounded-full border border-electric-blue/50 flex items-center justify-center mb-8 bg-dark-navy/50 backdrop-blur-md"
-          >
-            <motion.div
-              animate={{ rotate: -360 }}
-              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+          />
+
+          {/* ── Outlined watermark text ── */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
+            <motion.span
+              initial={prefersReducedMotion ? undefined : { opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 0.08, scale: 1 }}
+              transition={{ duration: 1.4, delay: 0.3, ease: "easeOut" }}
+              className="text-[22vw] sm:text-[18vw] font-black tracking-tighter outlined-text uppercase leading-none whitespace-nowrap"
             >
-              <Moon className="w-10 h-10 text-electric-blue" />
-            </motion.div>
+              LUNAR
+            </motion.span>
+          </div>
+
+          {/* ── Moon with atmospheric halo ── */}
+          <motion.div
+            initial={prefersReducedMotion ? undefined : { opacity: 0, scale: 0.88, y: 30 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 1.6, ease: [0.16, 1, 0.3, 1] }}
+            className="relative w-40 h-40 sm:w-52 sm:h-52 md:w-64 md:h-64 mb-8 flex-shrink-0"
+          >
+            {/* Outer atmospheric halo */}
+            <div
+              className="absolute inset-[-30%] rounded-full pointer-events-none"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(100,165,245,0.12) 20%, rgba(60,110,190,0.06) 45%, transparent 70%)",
+              }}
+            />
+
+            {/* Moon sphere */}
+            <div className="absolute inset-0 rounded-full overflow-hidden bg-[#0C1522] border border-[rgba(180,210,255,0.3)] shadow-[0_0_60px_rgba(100,165,245,0.18),0_0_120px_rgba(70,120,200,0.08)]">
+              {/* Gradient surface texture */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  backgroundImage:
+                    "radial-gradient(circle at 38% 35%, #3A4560 0%, #1A2235 40%, #0A1020 80%)",
+                }}
+              />
+              {/* Terminator shadow */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-black/30 to-black/90" />
+              {/* Top rim light */}
+              <div className="absolute top-0 inset-x-0 h-1/3 bg-gradient-to-b from-[rgba(180,215,255,0.22)] to-transparent" />
+            </div>
+
+            {/* Slow floating animation */}
+            {!prefersReducedMotion && (
+              <motion.div
+                className="absolute inset-0 rounded-full"
+                animate={{ y: [0, -8, 0] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+              />
+            )}
           </motion.div>
 
-          <h1 className="font-heading text-3xl font-bold tracking-widest mb-12 text-transparent bg-clip-text bg-gradient-to-r from-white to-white/50">
-            LUNASAFE
-          </h1>
-
-          {/* Progress Section */}
-          <div className="w-full space-y-4">
-            <div className="flex justify-between items-end font-mono text-sm">
-              <motion.div
-                key={step}
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex items-center gap-2 text-electric-blue"
-              >
-                <CurrentIcon className="w-4 h-4" />
-                {steps[step].text}
-              </motion.div>
-              <span className="text-white/70">{progress}%</span>
+          {/* ── Branding ── */}
+          <motion.div
+            initial={prefersReducedMotion ? undefined : { opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="relative z-10 text-center mb-8 px-4"
+          >
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-[0.25em] text-[#F2F2F2] uppercase mb-2">
+              LUNAR SPACE AI
+            </h1>
+            <div className="text-[11px] sm:text-xs font-mono tracking-[0.35em] text-[#8496B4] uppercase mb-3">
+              LUNAR EXPLORATION &amp; INTELLIGENCE
             </div>
-            
-            <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden relative">
-              <motion.div 
-                className="absolute top-0 left-0 h-full bg-electric-blue shadow-[0_0_10px_rgba(0,240,255,0.8)]"
-                style={{ width: `${progress}%` }}
+            <div className="text-xs sm:text-sm italic text-[#71717A] font-light tracking-wide">
+              &ldquo;Exploring the Unknown. Discovering the Moon.&rdquo;
+            </div>
+          </motion.div>
+
+          {/* ── Progress section ── */}
+          <motion.div
+            initial={prefersReducedMotion ? undefined : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+            className="relative z-10 w-full max-w-sm px-6 space-y-3"
+          >
+            {/* Step text */}
+            <div className="flex justify-between items-center font-mono text-[11px] text-[#A1A1AA]">
+              <motion.span
+                key={step}
+                initial={{ opacity: 0, x: -6 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="text-[#D6D6D6] tracking-wider truncate mr-3"
+              >
+                {STEPS[step]}
+              </motion.span>
+              <span className="font-semibold text-[#F2F2F2] tabular-nums">{progress}%</span>
+            </div>
+
+            {/* Progress bar */}
+            <div className="h-[3px] w-full bg-white/10 rounded-full overflow-hidden">
+              <motion.div
+                className="h-full rounded-full"
+                style={{
+                  width: `${progress}%`,
+                  background: "linear-gradient(90deg, #4A7DC8, #8CB4F0, #E2ECF8)",
+                  boxShadow: "0 0 14px rgba(100,165,245,0.6)",
+                }}
               />
             </div>
-          </div>
-        </div>
-      </motion.div>
+
+            {/* Sub-telemetry */}
+            <div className="flex justify-between text-[10px] font-mono text-[#71717A] tracking-widest">
+              <span>LAT 89.9°S</span>
+              <span>LRO-M3 ONLINE</span>
+              <span>SEC-LINK {progress}%</span>
+            </div>
+          </motion.div>
+
+          {/* Dark vignette edges */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                "radial-gradient(ellipse 70% 60% at 50% 50%, transparent 40%, #030508 100%)",
+            }}
+          />
+        </motion.div>
+      )}
     </AnimatePresence>
   );
 }

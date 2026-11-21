@@ -5,30 +5,33 @@ import { HTMLAttributes } from "react";
 
 interface GlassCardProps extends HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
-  glowColor?: "blue" | "cyan" | "purple" | "red" | "green" | "orange";
-  variant?: "default" | "panel" | "subtle";
+  glowColor?: "blue" | "cyan" | "purple" | "red" | "green" | "orange" | "white" | "none";
+  variant?: "default" | "panel" | "subtle" | "editorial";
 }
 
 export function GlassCard({
   children,
   className,
-  glowColor = "blue",
+  glowColor = "none",
   variant = "default",
   ...props
 }: GlassCardProps) {
   const variantStyles = {
-    default: "bg-dark-navy/40 backdrop-blur-lg border border-white/10 rounded-2xl",
-    panel: "bg-[#050816]/70 backdrop-blur-xl border border-white/5 rounded-3xl",
-    subtle: "bg-white/5 backdrop-blur-md border border-white/5 rounded-xl",
+    default: "bg-[#0B1220]/84 backdrop-blur-xl border border-[rgba(160,195,240,0.12)] rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.6)]",
+    panel: "bg-[#080E1C]/92 backdrop-blur-2xl border border-[rgba(160,195,240,0.14)] rounded-xl shadow-[0_12px_44px_rgba(0,0,0,0.8)]",
+    subtle: "bg-white/[0.03] backdrop-blur-md border border-[rgba(160,195,240,0.08)] rounded-lg",
+    editorial: "bg-[#091122]/90 backdrop-blur-xl border border-[rgba(160,195,240,0.14)] rounded-xl relative",
   };
 
   const glowStyles = {
-    blue: "hover:border-electric-blue/50 hover:shadow-[0_0_30px_rgba(0,240,255,0.15)]",
-    cyan: "hover:border-neon-cyan/50 hover:shadow-[0_0_30px_rgba(0,255,255,0.15)]",
-    purple: "hover:border-neon-purple/50 hover:shadow-[0_0_30px_rgba(176,38,255,0.15)]",
-    red: "hover:border-red-500/50 hover:shadow-[0_0_30px_rgba(239,68,68,0.15)]",
-    green: "hover:border-emerald-500/50 hover:shadow-[0_0_30px_rgba(16,185,129,0.15)]",
-    orange: "hover:border-orange-500/50 hover:shadow-[0_0_30px_rgba(249,115,22,0.15)]",
+    none: "hover:border-[rgba(180,215,255,0.3)] transition-all duration-300",
+    white: "hover:border-white/40 hover:shadow-[0_0_30px_rgba(255,255,255,0.08)] transition-all duration-300",
+    blue: "hover:border-[#84A0C6]/60 hover:shadow-[0_0_35px_rgba(100,160,240,0.18)] transition-all duration-300",
+    cyan: "hover:border-[#B8D4F5]/50 hover:shadow-[0_0_35px_rgba(140,190,250,0.16)] transition-all duration-300",
+    purple: "hover:border-[#9FBAD8]/50 hover:shadow-[0_0_35px_rgba(132,165,225,0.16)] transition-all duration-300",
+    red: "hover:border-rose-500/40 hover:shadow-[0_0_30px_rgba(239,68,68,0.12)] transition-all duration-300",
+    green: "hover:border-emerald-500/40 hover:shadow-[0_0_30px_rgba(16,185,129,0.12)] transition-all duration-300",
+    orange: "hover:border-amber-500/40 hover:shadow-[0_0_30px_rgba(245,158,11,0.12)] transition-all duration-300",
   };
 
   return (
@@ -41,8 +44,8 @@ export function GlassCard({
       )}
       {...props}
     >
-      {/* Internal subtle gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+      {/* Subtle top border highlight line with cosmic blue tint */}
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#84A0C6]/25 to-transparent pointer-events-none" />
       <div className="relative z-10">{children}</div>
     </div>
   );

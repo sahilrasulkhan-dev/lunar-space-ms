@@ -55,7 +55,10 @@ def analyze_image(image_id: int, db: Session = Depends(get_db)):
                 "landing_score": db_analysis.landing_score,
                 "confidence": db_analysis.confidence,
                 "terrain_type": db_analysis.terrain_type,
-                "processed_image_path": db_analysis.processed_image_path
+                "processed_image_path": db_analysis.processed_image_path,
+                "yolo_detections_count": stats.get("yolo_detections_count", 0),
+                "yolo_detections": stats.get("yolo_detections", []),
+                "model_name": stats.get("model_name", "YOLO (best.pt)")
             }
         }
     )

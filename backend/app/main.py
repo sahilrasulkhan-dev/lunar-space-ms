@@ -7,7 +7,7 @@ import uvicorn
 import os
 
 from app.database.database import engine, Base
-from app.routes import auth, upload, analysis, navigation, reports, health
+from app.routes import auth, upload, analysis, navigation, reports, health, simulation, chat
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -82,6 +82,8 @@ app.include_router(upload.router)
 app.include_router(analysis.router)
 app.include_router(navigation.router)
 app.include_router(reports.router)
+app.include_router(simulation.router)
+app.include_router(chat.router)
 
 if __name__ == "__main__":
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
