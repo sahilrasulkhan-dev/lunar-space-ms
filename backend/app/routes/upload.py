@@ -9,6 +9,7 @@ from app.database.database import get_db
 from app.models.models import Image, User
 from app.schemas.schemas import StandardResponse
 from app.utils.security import get_current_user
+from app.services.image_processor import ImageProcessor
 
 import logging
 from app.utils.exceptions import ProcessingError
@@ -41,8 +42,25 @@ async def upload_image(
     # Save file
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
+
+    # -------------------------------------------------------------
+    # Lunar Terrain Validation: Reject non-lunar images immediately
+    # -------------------------------------------------------------
+    processor = ImageProcessor()
+    is_lunar, reason = processor.validate_lunar_image(str(file_path))
+    if not is_lunar:
+        logger.warning(f"Upload rejected - invalid lunar image '{file.filename}': {reason}")
+        if file_path.exists():
+            try:
+                file_path.unlink()
+            except Exception:
+                pass
+        raise ProcessingError(
+            "Analysis Failed: Invalid Image. Please upload a valid lunar terrain image.",
+            "Lunar Terrain Verification"
+        )
         
-    # Save to database
+    # Save to database only if verified as valid lunar terrain
     db_image = Image(
         filename=file.filename,
         file_path=str(file_path),

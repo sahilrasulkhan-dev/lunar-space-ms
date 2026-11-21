@@ -100,6 +100,14 @@ function DashboardContent() {
     }
   };
 
+  const handleAnalysisReset = () => {
+    setIsAnalyzed(false);
+    setImageId(null);
+    setOriginalImagePath(null);
+    setAnalysisData(null);
+    stopHazardAlarm();
+  };
+
   const tabs = [
     { id: "simulation", label: "Rover Simulation & A*", icon: Compass, needsAnalysis: false, cursor: "SIMULATE" },
     { id: "assistant", label: "Lunar AI Assistant", icon: Bot, needsAnalysis: false, cursor: "ASSISTANT" },
@@ -235,7 +243,7 @@ function DashboardContent() {
                 {/* 1. UPLOAD TAB */}
                 {activeTab === "upload" && (
                   <div className="max-w-4xl mx-auto w-full my-auto py-6">
-                    <UploadSection onComplete={handleAnalysisComplete} />
+                    <UploadSection onComplete={handleAnalysisComplete} onReset={handleAnalysisReset} />
                   </div>
                 )}
 

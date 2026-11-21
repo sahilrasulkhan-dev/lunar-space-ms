@@ -25,6 +25,15 @@ def analyze_image(image_id: int, db: Session = Depends(get_db)):
         
     processor = ImageProcessor()
     
+    # Pre-validate before performing any terrain processing
+    is_lunar, reason = processor.validate_lunar_image(db_image.file_path)
+    if not is_lunar:
+        logger.warning(f"Analysis rejected - not lunar terrain '{db_image.file_path}': {reason}")
+        raise ProcessingError(
+            "Analysis Failed: Invalid Image. Please upload a valid lunar terrain image.",
+            "Lunar Terrain Verification"
+        )
+    
     output_filename = os.path.basename(db_image.file_path)
     stats = processor.process_lunar_image(db_image.file_path, output_filename)
 

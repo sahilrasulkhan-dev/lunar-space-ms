@@ -37,11 +37,110 @@ class ImageProcessor:
         self.results_dir = Path("app/results")
         self.results_dir.mkdir(parents=True, exist_ok=True)
 
+    def validate_lunar_image(self, image_path: str) -> tuple[bool, str]:
+        """
+        Validates whether the provided image is authentic lunar terrain / Moon surface imagery.
+        Rejects non-lunar images (humans, animals, buildings, cars, Earth landscapes, screenshots, random objects).
+        Returns (is_valid: bool, reason: str).
+        """
+        try:
+            img = cv2.imread(image_path)
+            if img is None:
+                return False, "Could not decode image file."
+            
+            # Dimension checks
+            h, w = img.shape[:2]
+            if h < 50 or w < 50:
+                return False, "Image dimensions are too small for lunar cartography analysis."
+
+            # 1. Color Divergence & Chromatic Saturation Analysis
+            # Lunar regolith is strictly achromatic/monochromatic.
+            b, g, r = cv2.split(img.astype(np.float32))
+            divergence = float(np.mean(np.abs(r - g) + np.abs(g - b) + np.abs(b - r)))
+            
+            hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+            mean_sat = float(np.mean(hsv[:, :, 1]))
+            p90_sat = float(np.percentile(hsv[:, :, 1], 90))
+
+            # Non-lunar colored photos (nature, people, vehicles, indoor scenes, graphics)
+            if divergence > 14.0 or mean_sat > 20.0 or p90_sat > 35.0:
+                return False, f"Image contains significant chromatic saturation ({mean_sat:.1f}/255) or color variance ({divergence:.1f}). Lunar terrain is monochromatic regolith."
+
+            # 2. Blank / White Document / Screenshot Detection
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            white_ratio = float(np.mean(gray > 240))
+            if white_ratio > 0.15:
+                return False, f"Image has abnormal stark white regions ({white_ratio:.1%}), typical of documents or screenshots."
+
+            dark_ratio = float(np.mean(gray < 5))
+            if dark_ratio > 0.92:
+                return False, "Image is predominantly pitch black with no distinguishable lunar surface details."
+
+            # Texture energy / Laplacian Variance
+            lap_var = float(np.var(cv2.Laplacian(gray, cv2.CV_64F)))
+            if lap_var < 18.0:
+                return False, f"Image lacks natural lunar regolith texture (Texture entropy variance: {lap_var:.1f})."
+
+            # 3. Artificial Geometry & Man-Made Structures (Buildings, Grids, Screens)
+            edges = cv2.Canny(gray, 50, 150)
+            lines = cv2.HoughLinesP(edges, 1, np.pi/180, threshold=75, minLineLength=45, maxLineGap=5)
+            if lines is not None and len(lines) > 20:
+                ortho_count = 0
+                for l in lines:
+                    pts = l.ravel()
+                    if len(pts) >= 4:
+                        x1, y1, x2, y2 = pts[0], pts[1], pts[2], pts[3]
+                        angle = abs(np.arctan2(y2 - y1, x2 - x1) * 180 / np.pi)
+                        if angle < 4.0 or abs(angle - 90.0) < 4.0 or abs(angle - 180.0) < 4.0:
+                            ortho_count += 1
+                ortho_ratio = ortho_count / len(lines)
+                if ortho_ratio > 0.65 and len(lines) > 25:
+                    return False, f"Artificial orthogonal geometric structures detected ({ortho_ratio:.1%} grid lines)."
+
+            # 4. Lunar Geological Morphology Verification (Craters, Boulders, Regolith)
+            enhanced = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8)).apply(cv2.GaussianBlur(gray, (5, 5), 0))
+            craters = cv2.HoughCircles(enhanced, cv2.HOUGH_GRADIENT, dp=1, minDist=40, param1=130, param2=28, minRadius=8, maxRadius=120)
+            crater_count = len(craters[0]) if craters is not None else 0
+
+            # YOLO Lunar Model Detection
+            yolo_model = get_yolo_model()
+            yolo_count = 0
+            if yolo_model is not None:
+                try:
+                    yolo_res = yolo_model.predict(source=image_path, conf=0.18, verbose=False)
+                    if yolo_res and len(yolo_res) > 0:
+                        yolo_count = len(yolo_res[0].boxes)
+                except Exception as e:
+                    logger.warning(f"YOLO verification pass error: {e}")
+
+            # Natural lunar terrain must have recognizable craters or YOLO lunar features
+            if crater_count == 0 and yolo_count == 0:
+                # Secondary check for subtle mare terrain
+                craters_subtle = cv2.HoughCircles(enhanced, cv2.HOUGH_GRADIENT, dp=1, minDist=30, param1=100, param2=22, minRadius=6, maxRadius=140)
+                subtle_count = len(craters_subtle[0]) if craters_subtle is not None else 0
+                if subtle_count == 0:
+                    return False, "No recognizable lunar surface features (craters, boulders, or regolith depressions) could be identified."
+
+            return True, f"Identified lunar terrain with {crater_count} craters, {yolo_count} neural features (Texture variance: {lap_var:.1f})."
+            
+        except Exception as e:
+            logger.error(f"Lunar validation exception: {e}")
+            return False, f"Validation error: {str(e)}"
+
     def process_lunar_image(self, image_path: str, output_filename: str):
         """
         Process the lunar image using YOLO (best.pt) neural detection combined
         with OpenCV terrain segmentation to detect craters, boulders, and safe zones.
         """
+        # Validate lunar imagery before performing any terrain processing
+        is_lunar, reason = self.validate_lunar_image(image_path)
+        if not is_lunar:
+            logger.warning(f"Rejected non-lunar image '{image_path}': {reason}")
+            raise ProcessingError(
+                "Analysis Failed: Invalid Image. Please upload a valid lunar terrain image.",
+                "Lunar Terrain Verification"
+            )
+
         # Read image
         try:
             img = cv2.imread(image_path)
