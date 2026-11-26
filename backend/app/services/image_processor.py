@@ -293,7 +293,7 @@ class ImageProcessor:
             "landing_score": round(landing_score, 2),
             "confidence": model_conf,
             "terrain_type": "YOLO-Classified Mare Basalt" if safe_percentage > 60 else "Rocky/Cratered High-Hazard Regolith",
-            "processed_image_path": str(output_path),
+            "processed_image_path": output_path.as_posix(),
             "terrain_map": cv2.bitwise_or(dense_edges, crater_mask),
             "yolo_detections_count": len(yolo_detections),
             "yolo_detections": yolo_detections,

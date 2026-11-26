@@ -119,12 +119,16 @@ function DashboardContent() {
     { id: "report", label: "Mission Dossier", icon: FileText, needsAnalysis: false, cursor: "DOSSIER" },
   ] as const;
 
-  const displayOriginal = originalImagePath 
-    ? `http://127.0.0.1:8000/${originalImagePath.replace('app/', '')}`
+  const cleanPath = (p?: string | null) => (p ? p.replace(/\\/g, "/").replace(/^app\//, "") : null);
+
+  const originalClean = cleanPath(originalImagePath);
+  const displayOriginal = originalClean 
+    ? `http://127.0.0.1:8000/${originalClean}`
     : "https://images.unsplash.com/photo-1522030299830-16b8d3d049fe?q=75&w=1200&auto=format&fit=crop";
     
-  const displayAnalyzed = analysisData?.processed_image_path
-    ? `http://127.0.0.1:8000/${analysisData.processed_image_path.replace('app/', '')}`
+  const analyzedClean = cleanPath(analysisData?.processed_image_path);
+  const displayAnalyzed = analyzedClean
+    ? `http://127.0.0.1:8000/${analyzedClean}`
     : "https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?q=75&w=1200&auto=format&fit=crop";
 
   return (

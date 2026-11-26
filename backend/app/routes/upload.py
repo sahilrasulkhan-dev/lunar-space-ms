@@ -73,5 +73,5 @@ async def upload_image(
     return StandardResponse(
         success=True,
         message="Image uploaded successfully",
-        data={"image_id": db_image.id, "file_path": str(file_path)}
+        data={"image_id": db_image.id, "file_path": Path(file_path).as_posix()}
     )
